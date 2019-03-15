@@ -4,8 +4,8 @@ import java.io.*;
 
 public class PartitaDiCalcio extends Categoria implements Serializable{
 	
-	private static final int GENERE=12;
-	private static final int FASCIA_DI_ETA=13;
+	private static final int GENERE=14;
+	private static final int FASCIA_DI_ETA=15;
 	private static final String descrizione = "Una partita di calcio";
 	private static final String nome = "Partita di Calcio";
 	private Campo[] campiSpecifici;

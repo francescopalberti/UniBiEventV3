@@ -8,8 +8,10 @@ import java.util.Vector;
 
 public class Application {
 	
-	public static String pathProfilo = "C:\\Users\\zenry\\git\\ZanellaGramV2\\ZanellaGramV2\\data\\profilo.dat";
-	public static String pathPartite = "C:\\Users\\zenry\\git\\ZanellaGramV2\\ZanellaGramV2\\data\\partite.dat";
+	public static String pathProfilo = "C:\\Users\\zenry\\git\\ZanellaGramV3\\ZanellaGramV3\\data\\profilo.dat";
+	public static String pathPartite = "C:\\Users\\zenry\\git\\ZanellaGramV3\\ZanellaGramV3\\data\\partite.dat";
+	
+	private static final int NUMERO_CAMPI=16;
 	
 	private static final int TITOLO=0;
 	private static final int NUMERO_PARTECIPANTI=1;
@@ -23,9 +25,12 @@ public class Application {
 	private static final int DATA_CONCLUSIVA=9;
 	private static final int ORA_CONCLUSIVA=10;
 	private static final int NOTE=11;
+	private static final int TOLLERANZA_PARTECIPANTI=12;
+	private static final int TERMINE_RITIRO_ISCRIZIONE=13;
 	
-	private static final int GENERE=12;
-	private static final int FASCIA_DI_ETA=13;
+	
+	private static final int GENERE=14;
+	private static final int FASCIA_DI_ETA=15;
 	
 	private String[] categorie = {"Partite di calcio"};
 	private Data dataOdierna;
@@ -46,7 +51,7 @@ public class Application {
 
 	@SuppressWarnings("unchecked")
 	private void initObjects() throws ClassNotFoundException, IOException {
-		campi = new Campo[14];
+		campi = new Campo[NUMERO_CAMPI];
 		assegnaPartitaDiCalcio(campi);
 		
 		//caricamento oggetti
@@ -126,6 +131,7 @@ public class Application {
 			{
 			   case NUMERO_PARTECIPANTI:
 			   case QUOTA:
+			   case TOLLERANZA_PARTECIPANTI:
 			      campi[i].setValore(Utility.leggiIntero(""));
 			      break;
 			   case TITOLO:
@@ -142,6 +148,7 @@ public class Application {
 			   case TERMINE_ISCRIZIONI:
 			   case DATA:
 			   case DATA_CONCLUSIVA:
+			   case TERMINE_RITIRO_ISCRIZIONE:
 				   Boolean formatoDataErrato=false;
 				   Data date;
 				   do {
@@ -293,6 +300,8 @@ public class Application {
 		campi[DATA_CONCLUSIVA]=new Campo<Data>("Data conclusiva","Indica la data di conclusione dell'evento",false);
 		campi[ORA_CONCLUSIVA]=new Campo<Ora>("Ora conclusiva","Indica l'ora conclusiva dell'evento",false);
 		campi[NOTE]=new Campo<String>("Note","Informazioni aggiuntive",false);		
+		campi[TOLLERANZA_PARTECIPANTI]=new Campo<Integer>("Tolleranza numero di partecipanti","Indica quanti partecipanti siano accettabili in esubero a numero di partecipanti",false);
+		campi[TERMINE_RITIRO_ISCRIZIONE]=new Campo<Data>("Termine ultimo di ritiro iscrizione","Indica la data entro cui ogni fruitore può cancellare la sua iscrizione",false);
 	}
 	
 	public void assegnaPartitaDiCalcio(Campo[] campi) {

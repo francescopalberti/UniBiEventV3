@@ -50,6 +50,8 @@ public Data(Integer gg, Integer mm, Integer yy) {
 	}
 	
 	public boolean controlloData() {
+		if(anno==null && mese==null && giorno==null) return true;
+		if(anno==null || mese==null || giorno==null) return false;
 		if(anno<2019) return false;
 		else {
 			switch (mese) {

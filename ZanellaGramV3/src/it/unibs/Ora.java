@@ -34,7 +34,9 @@ public class Ora implements Serializable{
 	}
 	
 	public boolean controlloOra() {
-		return ora<=23 && minuti<=59;
+		if(ora==null && minuti==null) return true;
+		if(ora==null || minuti==null) return false;
+		return (ora<=23 && minuti<=59);
 	}
 	
 

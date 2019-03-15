@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.Vector;
 
 public class Categoria implements Serializable {
+	private static final int NUMERO_CAMPI=14;
+	
 	private static final int TITOLO=0;
 	private static final int NUMERO_PARTECIPANTI=1;
 	private static final int TERMINE_ISCRIZIONI=2;
@@ -17,6 +19,8 @@ public class Categoria implements Serializable {
 	private static final int DATA_CONCLUSIVA=9;
 	private static final int ORA_CONCLUSIVA=10;
 	private static final int NOTE=11;
+	private static final int TOLLERANZA_PARTECIPANTI=12;
+	private static final int TERMINE_RITIRO_ISCRIZIONE=13;
 	
 	private static final String lineSeparator="\n";
 	
@@ -25,6 +29,7 @@ public class Categoria implements Serializable {
 	private Boolean chiuso;
 	private Boolean fallito;
 	private Boolean concluso;
+	private Boolean ritirato;
 	private Campo[] campiBase;
 	private int partecipantiAttuali;
 	private Vector<SpazioPersonale> listaPartecipanti;
@@ -33,7 +38,7 @@ public class Categoria implements Serializable {
 	
 	
 	public Categoria(String _nome, String _descrizione, Campo[] _campiBase) {
-		campiBase = new Campo[12];
+		campiBase = new Campo[NUMERO_CAMPI];
 		campiBase = _campiBase;
 		nome=_nome;
 		descrizione=_descrizione;
@@ -41,6 +46,7 @@ public class Categoria implements Serializable {
 		chiuso=false;
 		fallito=false;
 		concluso=false;
+		ritirato=false;
 	}
 
 	public String getNome() {
@@ -74,8 +80,17 @@ public class Categoria implements Serializable {
 		
 	}
 
-	private void controlloChiusura() {
-		if (partecipantiAttuali>=(int)campiBase[NUMERO_PARTECIPANTI].getValore()) {
+	private void controlloChiusura(Data dataOdierna) {
+		Integer numeroPartecipanti=(Integer)campiBase[NUMERO_PARTECIPANTI].getValore();
+		Integer tolleranza=(Integer)campiBase[TOLLERANZA_PARTECIPANTI].getValore();
+		Data dataScadenza = (Data) campiBase[TERMINE_ISCRIZIONI].getValore();
+		boolean scaduto=dataScadenza.isPrecedente(dataOdierna);
+		boolean condizione1=partecipantiAttuali>=numeroPartecipanti &&  partecipantiAttuali<=numeroPartecipanti+tolleranza && scaduto;
+		Data dataRitiro = (Data) campiBase[TERMINE_RITIRO_ISCRIZIONE].getValore();
+		boolean ritirabile = dataRitiro.isPrecedente(dataOdierna);
+		boolean condizione2= !scaduto && ritirabile && (partecipantiAttuali==numeroPartecipanti+tolleranza);
+		
+		if (condizione1 || condizione2) {
 			chiuso=true;	
 			for (SpazioPersonale profilo : listaPartecipanti) {
 				profilo.addNotifica(infoChiusura());
@@ -85,7 +100,7 @@ public class Categoria implements Serializable {
 	}
 	
 	public boolean aggiornaStato(Data dataOdierna) {
-		controlloChiusura();
+		controlloChiusura(dataOdierna);
 		
 		Data dataScadenza = (Data) campiBase[TERMINE_ISCRIZIONI].getValore();
 		if (dataScadenza.isPrecedente(dataOdierna) && (partecipantiAttuali < (int) campiBase[NUMERO_PARTECIPANTI].getValore())) {
