@@ -33,11 +33,10 @@ public class Categoria implements Serializable {
 	private Campo[] campiBase;
 	private int partecipantiAttuali;
 	private Vector<SpazioPersonale> listaPartecipanti;
+	private SpazioPersonale creatore;
 	
 	
-	
-	
-	public Categoria(String _nome, String _descrizione, Campo[] _campiBase) {
+	public Categoria(String _nome, String _descrizione, Campo[] _campiBase, SpazioPersonale _creatore) {
 		campiBase = new Campo[NUMERO_CAMPI];
 		campiBase = _campiBase;
 		nome=_nome;
@@ -47,6 +46,7 @@ public class Categoria implements Serializable {
 		fallito=false;
 		concluso=false;
 		ritirato=false;
+		creatore=_creatore;
 	}
 
 	public String getNome() {
@@ -75,9 +75,12 @@ public class Categoria implements Serializable {
 	
 	public void aggiungiPartecipante(SpazioPersonale partecipante) {
 		partecipantiAttuali++;
-		listaPartecipanti.add(partecipante);
-		
-		
+		listaPartecipanti.add(partecipante);	
+	}
+	
+	public void removePartecipante(SpazioPersonale rimosso) {
+		partecipantiAttuali--;
+		listaPartecipanti.remove(rimosso);
 	}
 
 	private void controlloChiusura(Data dataOdierna) {
@@ -120,12 +123,19 @@ public class Categoria implements Serializable {
 		if (dataConclusiva.isPrecedente(dataOdierna) && !fallito) {
 			concluso=true;
 		}
-		return concluso || fallito || chiuso;
+		return concluso || fallito || chiuso || ritirato;
 	}
 	
 	private String infoFallimento() {
 		StringBuffer s = new StringBuffer();
 		s.append("L'evento "+ campiBase[TITOLO].getValore() +" è fallito. ");
+		s.append(lineSeparator);
+		return s.toString();
+	}
+	
+	public String infoRitiro() {
+		StringBuffer s = new StringBuffer();
+		s.append("L'evento "+ campiBase[TITOLO].getValore() +" è stato ritirato. ");
 		s.append(lineSeparator);
 		return s.toString();
 	}
@@ -146,7 +156,22 @@ public class Categoria implements Serializable {
 	}
 	
 	public boolean isAperto() {
-		return (!chiuso && !fallito && !concluso);
+		return (!chiuso && !fallito && !concluso && !ritirato);
+	}
+	
+	public boolean isRitirabile(Data dataOdierna){
+		Data termineIscrizioni = (Data)campiBase[TERMINE_ISCRIZIONI].getValore();
+		Data termineRitiroIscrizioni = (Data)campiBase[TERMINE_RITIRO_ISCRIZIONE].getValore();
+		if(termineRitiroIscrizioni==null)
+			return dataOdierna.isPrecedente(termineIscrizioni);
+		else return dataOdierna.isPrecedente(termineRitiroIscrizioni);
+	}
+	
+	public void ritiraEvento() {
+		ritirato=true;
+		for (SpazioPersonale profilo : listaPartecipanti) {
+			profilo.addNotifica(infoRitiro());
+		}
 	}
 	
 	public String getDescrizioneCampi() {

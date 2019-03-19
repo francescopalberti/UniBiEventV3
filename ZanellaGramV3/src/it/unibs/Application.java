@@ -39,7 +39,7 @@ public class Application {
 	private String titoloMain = "HOME";
 	private Vector<PartitaDiCalcio> listaPartite;
 	private String[] vociMain = {"Esci e salva","Vedi eventi", "Crea evento", "Vedi profilo"};
-	private String[] vociSpazioPersonale = {"Esci","Vedi eventi a cui sono iscritto","Vedi notifiche"};
+	private String[] vociSpazioPersonale = {"Esci","Vedi eventi che ho creato","Vedi eventi a cui sono iscritto","Vedi notifiche"};
 	
 	private Campo[] campi;
 	
@@ -173,9 +173,9 @@ public class Application {
 			}
 		}
 		if(controlloCompilazione()){
-			PartitaDiCalcio unaPartita = new PartitaDiCalcio(Arrays.copyOfRange(campi, 0, 11), Arrays.copyOfRange(campi, 12, 13));
+			PartitaDiCalcio unaPartita = new PartitaDiCalcio(Arrays.copyOfRange(campi, 0, 11), Arrays.copyOfRange(campi, 12, 13),mioProfilo);
 			listaPartite.add(unaPartita);
-			mioProfilo.addEvento(unaPartita);
+			mioProfilo.addEventoCreato(unaPartita);
 		} else {
 			System.out.println("Non hai compilato alcuni campi obbligatori");
 		}
@@ -197,7 +197,7 @@ public class Application {
 		int scelta= Utility.sceltaDaLista("Seleziona categoria (0 per tornare alla home)",categorie.length);
 		switch(scelta)
 		{
-			case 1: vediEventi(getEventiDisponibili());
+			case 1: vediPartite(getEventiDisponibili());
 					scegliEvento(getEventiDisponibili());
 				break;
 			case 0: return;
@@ -222,7 +222,7 @@ public class Application {
 		return disponibili;
 	}
 	
-	public void vediEventi(Vector<Categoria> disponibili)
+	public void vediPartite(Vector<Categoria> disponibili)
 	{
 		for(int i=0; i<disponibili.size(); i++) { 
 			System.out.println(disponibili.get(i).getNome() + " " + (i+1));
@@ -243,15 +243,19 @@ public class Application {
 	private void visualizzaSpazioPersonale() {
 		boolean fine=false;
 		do {
-			int i = Utility.scegli("SPAZIO PERSONALE",vociSpazioPersonale,"Seleziona una voce",3);
+			int i = Utility.scegli("SPAZIO PERSONALE",vociSpazioPersonale,"Seleziona una voce",4);
 			switch(i) {
 				case 0:fine=true;
 					break;
 				case 1:
-					if(mioProfilo.hasEventi()) mioProfilo.stampaIMieiEventi();
+					gestioneEventiCreati();
 					fine=true;
 					break;
 				case 2:
+					gestioneEventiPrenotati();
+					fine=true;
+					break;
+				case 3:
 					gestioneNotifiche();
 					fine=true;
 					break;
@@ -262,6 +266,48 @@ public class Application {
 		}while(!fine);
 	}
 		
+	private void gestioneEventiCreati() {
+		int a;
+		do {
+			if(mioProfilo.hasEventiCreati()) { 
+				mioProfilo.stampaEventiCreati();
+				a = Utility.sceltaDaLista("Seleziona evento che vuoi ritirare (0 per uscire):", mioProfilo.getEventiCreati().size());
+				if(a==0) return;
+				else { 
+					Categoria ritirato = mioProfilo.getEventiCreati().get(a-1);
+					if(ritirato.isRitirabile(dataOdierna)) {
+						mioProfilo.deleteEventoCreato(a-1); 
+						ritirato.ritiraEvento();
+					}else System.out.println("Non è più possibile ritirare quest'evento");
+				}
+			}else {
+				System.out.println("Non hai creato nessun evento!");
+				a=0;
+			}
+		}while(a!=0);
+	}
+
+	private void gestioneEventiPrenotati() {
+		int a;
+		do {
+			if(mioProfilo.hasEventiPrenotati()) { 
+				mioProfilo.stampaEventiPrenotati();
+				a = Utility.sceltaDaLista("Seleziona evento a cui vuoi disiscriverti (0 per uscire):", mioProfilo.getEventiPrenotati().size());
+				if(a==0) return;
+				else {
+					Categoria rimosso = mioProfilo.getEventiPrenotati().get(a-1);
+					if(rimosso.isRitirabile(dataOdierna)){
+						mioProfilo.deleteEventoPrenotato(a-1); 				
+						rimosso.removePartecipante(mioProfilo);
+					}else System.out.println("Non è più possibile disiscriversi da quest'evento");
+				}
+			}else {
+				System.out.println("Non sei iscritto a nessun evento!");
+				a=0;
+			}
+		}while(a!=0);
+	}
+
 	public void gestioneNotifiche() {
 		int a;
 		if(mioProfilo.noNotifiche()) {
@@ -280,7 +326,7 @@ public class Application {
 	
 	private void partecipaEvento(Categoria evento) {
 		evento.aggiungiPartecipante(mioProfilo);
-		mioProfilo.addEvento(evento);
+		mioProfilo.addEventoPrenotato(evento);
 		controlloEventi();
 	}
 	

@@ -12,8 +12,8 @@ public class PartitaDiCalcio extends Categoria implements Serializable{
 	
 	private static final String lineSeparator="\n";
 
-	public PartitaDiCalcio(Campo[] _campiGenerici, Campo[] _campiSpecifici) {
-		super(nome, descrizione, _campiGenerici);
+	public PartitaDiCalcio(Campo[] _campiGenerici, Campo[] _campiSpecifici, SpazioPersonale _creatore) {
+		super(nome, descrizione, _campiGenerici,_creatore);
 		campiSpecifici = new Campo[2];
 		campiSpecifici = _campiSpecifici;
 	}
