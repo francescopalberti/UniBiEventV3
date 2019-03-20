@@ -70,7 +70,7 @@ public class Application {
 		Object result=new Object();
 		
 		if(c==PartitaDiCalcio.class) {
-			result = (Vector<Categoria>) objectIn.readObject();
+			result = (Vector<PartitaDiCalcio>) objectIn.readObject();
 			objectIn.close();
 		}
 		else if(c==SpazioPersonale.class){

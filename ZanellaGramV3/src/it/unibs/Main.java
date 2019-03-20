@@ -6,6 +6,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 public class Main {
+	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		
 		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"),Locale.ITALY);
