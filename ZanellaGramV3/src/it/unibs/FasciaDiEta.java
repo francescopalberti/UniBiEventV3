@@ -10,8 +10,8 @@ public class FasciaDiEta implements Serializable {
 	
 	public FasciaDiEta(Integer min, Integer max) {
 		if (min==null||max==null) {
-			min=null;
-			max=null;
+			this.et‡Minima=min;
+			this.et‡Massima=max;
 		} else {
 			if(min<max){
 				this.et‡Minima=min;

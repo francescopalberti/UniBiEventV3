@@ -70,7 +70,7 @@ public class Application {
 		Object result=new Object();
 		
 		if(c==PartitaDiCalcio.class) {
-			result = (Vector<PartitaDiCalcio>) objectIn.readObject();
+			result = (Vector<Categoria>) objectIn.readObject();
 			objectIn.close();
 		}
 		else if(c==SpazioPersonale.class){
@@ -92,7 +92,7 @@ public class Application {
 				case 0: {fine=true;
 					esciEsalva();}
 					break;
-				case 1:vediEventi();
+				case 1:vediCategorie();
 					break;
 				case 2:creaEvento();
 					break;
@@ -113,19 +113,47 @@ public class Application {
 	}
 
 	private void creaEvento() {
-		vediCategorie();
+		stampaCategorie();
 		int scelta= Utility.sceltaDaLista("Seleziona categoria (0 per tornare alla home)",categorie.length);
 		switch(scelta)
 		{
-			case 1: creaPartita();
+			case 1: compilaEvento(PartitaDiCalcio.class);
 				break;
 			case 0: return;
 		}
 	}
 	
+	public void compilaEvento(Class c) {
+		if(c==PartitaDiCalcio.class) {
+			Campo[] campi =new Campo [16];
+			assegnaPartitaDiCalcio(campi);
+			compilazioneCampiGenerici(campi);
+			for (int i = 14; i < 16; i++) {
+				System.out.print(campi[i].toString());
+				switch (i)
+				{	
+				   case GENERE:
+					   campi[i].setValore(Utility.leggiStringa(""));
+				      break;
+				   case FASCIA_DI_ETA:
+					   FasciaDiEta fascia = new FasciaDiEta(Utility.leggiIntero("\nEtà min"), Utility.leggiIntero("Età max"));
+					   campi[i].setValore(fascia);
+					      break;
+				}
+			}
+			if(controlloCompilazione(campi)){
+				PartitaDiCalcio unaPartita = new PartitaDiCalcio(Arrays.copyOfRange(campi, 0, 14), Arrays.copyOfRange(campi, 14, 16),mioProfilo);
+				listaPartite.add(unaPartita);
+				mioProfilo.addEventoCreato(unaPartita);
+			} else {
+				System.out.println("Non hai compilato alcuni campi obbligatori");
+			}
+		}
+		
+	}
 	
-	private void creaPartita() {
-		for (int i = 0; i < campi.length; i++) {
+	public void compilazioneCampiGenerici(Campo [] campi){
+		for (int i = 0; i < 14; i++) {
 			System.out.print(campi[i].toString());
 			switch (i)
 			{
@@ -138,13 +166,8 @@ public class Application {
 			   case LUOGO:
 			   case COMPRESO_IN_QUOTA:
 			   case NOTE:
-			   case GENERE:
 				   campi[i].setValore(Utility.leggiStringa(""));
 			      break;
-			   case FASCIA_DI_ETA:
-				   FasciaDiEta fascia = new FasciaDiEta(Utility.leggiIntero("\nEtà min"), Utility.leggiIntero("Età max"));
-				   campi[i].setValore(fascia);
-				      break;
 			   case TERMINE_ISCRIZIONI:
 			   case DATA:
 			   case DATA_CONCLUSIVA:
@@ -172,33 +195,27 @@ public class Application {
 				      break;
 			}
 		}
-		if(controlloCompilazione()){
-			PartitaDiCalcio unaPartita = new PartitaDiCalcio(Arrays.copyOfRange(campi, 0, 11), Arrays.copyOfRange(campi, 12, 13),mioProfilo);
-			listaPartite.add(unaPartita);
-			mioProfilo.addEventoCreato(unaPartita);
-		} else {
-			System.out.println("Non hai compilato alcuni campi obbligatori");
-		}
+		
 	}
 	
-	public Boolean controlloCompilazione() {
-		for (int i = 0; i < campi.length; i++) {
+	public Boolean controlloCompilazione(Campo [] campi) {
+		for (int i = 0; i < NUMERO_CAMPI; i++) {
 			if(campi[i].isObbligatorio()) {
-				if(campi[i].getValore()==null) return false;
+				if(campi[i].getValore()==null || campi[i].getValore()=="") return false;
 			}
 		}
 		return true;
 		
 	}
 
-	public void vediEventi()
+	public void vediCategorie()
 	{
-		vediCategorie();
+		stampaCategorie();
 		int scelta= Utility.sceltaDaLista("Seleziona categoria (0 per tornare alla home)",categorie.length);
 		switch(scelta)
 		{
-			case 1: vediPartite(getEventiDisponibili());
-					scegliEvento(getEventiDisponibili());
+			case 1: vediEventi(getEventiDisponibili(PartitaDiCalcio.class));
+					scegliEvento(getEventiDisponibili(PartitaDiCalcio.class));
 				break;
 			case 0: return;
 		}
@@ -206,31 +223,32 @@ public class Application {
 	
 	
 
-	public void vediCategorie()
+	public void stampaCategorie()
 	{
 		for (int i = 0; i < categorie.length; i++) {
 			System.out.println(i+1 + ") " + categorie[i]);
 		}
 	}
 	
-	private Vector<Categoria> getEventiDisponibili(){
+	private Vector<Categoria> getEventiDisponibili(Class c){
 		Vector<Categoria> disponibili = new Vector<Categoria>();
-		for(Categoria p:listaPartite) {
-			if(!mioProfilo.isPartecipante(p) && p.isAperto()) disponibili.add(p);
+		if(c==PartitaDiCalcio.class) {
+			for(Categoria p:listaPartite) 
+				if(!mioProfilo.isPartecipante(p) && p.isAperto()) disponibili.add(p);		
 		}
-		
 		return disponibili;
 	}
 	
-	public void vediPartite(Vector<Categoria> disponibili)
+	public void vediEventi(Vector<Categoria> disponibili)
 	{
 		for(int i=0; i<disponibili.size(); i++) { 
 			System.out.println(disponibili.get(i).getNome() + " " + (i+1));
 			System.out.println(disponibili.get(i).getDescrizioneCampi());
 		}
+		
 	}
 	
-	private void scegliEvento(Vector<Categoria> disponibili) {
+	public void scegliEvento(Vector<Categoria> disponibili) {
 		int a = Utility.sceltaDaLista("Seleziona partita a cui vuoi aderire (0 per uscire):", disponibili.size());
 		
 			if(a==0) return;
