@@ -8,8 +8,8 @@ import java.util.Vector;
 
 public class Application {
 	
-	public static String pathProfilo = "C:\\Users\\zenry\\git\\ZanellaGramV3\\ZanellaGramV3\\data\\profilo.dat";
-	public static String pathPartite = "C:\\Users\\zenry\\git\\ZanellaGramV3\\ZanellaGramV3\\data\\partite.dat";
+	public static String pathProfilo = "./ZanellaGramV3/data/profilo.dat";
+	public static String pathPartite = "./ZanellaGramV3/data/partite.dat";
 	
 	private static final int NUMERO_CAMPI=16;
 	
