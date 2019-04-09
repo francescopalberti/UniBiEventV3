@@ -15,7 +15,6 @@ public class Campo<T> implements Serializable {
 		descrizione=_descrizione;
 		obbligatorietà=_obbligatorietà;
 		valore=null;
-		
 	}
 
 	public String getNome() {
