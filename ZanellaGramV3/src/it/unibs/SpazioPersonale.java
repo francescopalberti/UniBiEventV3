@@ -86,7 +86,7 @@ public class SpazioPersonale implements Serializable {
 		System.out.println("EVENTI A CUI SONO ISCRITTO:");
 		for(int i=0; i< eventiPrenotati.size(); i++) { 
 			System.out.println(eventiPrenotati.get(i).getNome() + (i+1));
-			System.out.println(eventiPrenotati.get(i).getDescrizioneCampi());
+			System.out.println(eventiPrenotati.get(i).getCampiCompilati());
 		}
 	}
 	
@@ -94,7 +94,7 @@ public class SpazioPersonale implements Serializable {
 		System.out.println("EVENTI CHE HO CREATO:");
 		for(int i=0; i< eventiCreati.size(); i++) { 
 			System.out.println(eventiCreati.get(i).getNome() + (i+1));
-			System.out.println(eventiCreati.get(i).getDescrizioneCampi());
+			System.out.println(eventiCreati.get(i).getCampiCompilati());
 		}
 	}
 
@@ -127,4 +127,11 @@ public class SpazioPersonale implements Serializable {
 			if(evento.equals(c2)) return true;
 		return false;
 	}
+	
+	/*metodo per cancellare gli eventi prenotati. Non utilizzato
+	public void aggiornaEventiPrenotati() {
+		for (Categoria evento : eventiPrenotati) {
+			if(!evento.isAperto()) eventiPrenotati.remove(evento);
+		}
+	}*/
 }

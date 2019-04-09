@@ -2,9 +2,70 @@ package it.unibs;
 
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.util.Vector;
 
 public class Utility {
-		
+	private static Scanner lettore = creaScanner();
+	
+	private final static String ERRORE_FORMATO = "Attenzione: il dato inserito non e' nel formato corretto.";
+	
+	private static Scanner creaScanner ()
+	  {
+	   Scanner creato = new Scanner(System.in);
+	   creato.useDelimiter(System.getProperty("line.separator"));
+	   return creato;
+	  }
+	
+
+	  public static int leggiIntero (String messaggio)
+	  {
+	   boolean finito = false;
+	   int valoreLetto = 0;
+	   do
+	    {
+	     System.out.println(messaggio+"--->");
+	     try
+	      {
+	       valoreLetto = lettore.nextInt();
+	       finito = true;
+	      }
+	     catch (InputMismatchException e)
+	      {
+	       System.out.println(ERRORE_FORMATO);
+	       String daButtare = lettore.next(); 
+	      }
+	    } while (!finito);
+	   return valoreLetto;
+	  }
+	  
+	  public static Integer leggiInteroOpzionale (String messaggio)
+	  {
+	   boolean finito = false;
+	   Integer valoreLetto = null;
+	   do
+	    {
+	     System.out.println(messaggio+"--->");
+	     try
+	      {
+	    	 if (lettore.hasNextInt())
+		      {
+		       valoreLetto = lettore.nextInt();
+		       finito = true;
+		      } else if(lettore.next().equals("")){
+		    	  valoreLetto=null;
+		    	  finito=true;
+		      }
+	      }
+	     catch (InputMismatchException e)
+	      {
+	       System.out.println(ERRORE_FORMATO);
+	       String daButtare = lettore.next();
+	      }
+	     if(!finito) System.out.println("Inserimento errato, riprovare.");
+	    } while (!finito);
+	   return valoreLetto;
+	  }
+	  
 	public static int scegli(String titoloMain, String[] vociMain, String query, int dim)
 	{
 		System.out.println("________________________________________________");
@@ -13,29 +74,11 @@ public class Utility {
 		for(int i=0;i<dim;i++) {
 			System.out.println(i+") "+vociMain[i]);
 		}
-		int a = leggiIntero(query);
+		Integer a = leggiIntero(query);
 		return a;
 	}
 	
-	public static Integer leggiIntero(String query) 
-	{
-		Integer scelta=null;
-		try {
-			System.out.println(query + " -->");
-			Scanner in= new Scanner(System.in);
-			String line=in.nextLine();
-			if (!line.equals("")) {
-				scelta = Integer.parseInt(line);
-			} else {
-				scelta=null; 
-			}
-			}catch(InputMismatchException e)
-		{
-			System.out.println("Errore di inserimento!");
-		}
-		return scelta;
-	}
-	
+		  
 	public static String leggiStringa() 
 	{
 		String lettura = null;
@@ -43,6 +86,7 @@ public class Utility {
 			
 			Scanner in= new Scanner(System.in);
 			lettura=in.nextLine();
+			if(lettura.isEmpty()) lettura=null;
 		}catch(InputMismatchException e)
 		{
 			System.out.println("Errore di inserimento!");
@@ -57,6 +101,7 @@ public class Utility {
 			System.out.println(messaggio + " -->");
 			Scanner in= new Scanner(System.in);
 			lettura=in.nextLine();
+			if(lettura.isEmpty()) lettura=null;
 		}catch(InputMismatchException e)
 		{
 			System.out.println("Errore di inserimento!");
@@ -77,6 +122,11 @@ public class Utility {
 		}while(!fine);
 		return a;
 	}
-	
+
+	public static void stampaVettoreNumerato(Vector<String> daStampare) {
+		for (int i = 0; i < daStampare.size(); i++) {
+			System.out.println(i+1 + ") " + daStampare.get(i));
+		}
+	}
 
 }

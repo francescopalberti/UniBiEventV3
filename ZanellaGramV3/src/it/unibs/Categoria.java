@@ -14,7 +14,7 @@ public class Categoria implements Serializable {
 	private static final int DATA=4;
 	private static final int ORA=5;
 	private static final int DURATA=6;
-	private static final int QUOTA=7;
+	protected static final int QUOTA=7;
 	private static final int COMPRESO_IN_QUOTA=8;
 	private static final int DATA_CONCLUSIVA=9;
 	private static final int ORA_CONCLUSIVA=10;
@@ -26,11 +26,13 @@ public class Categoria implements Serializable {
 	
 	private String nome;
 	private String descrizione;
-	private Boolean chiuso;
-	private Boolean fallito;
-	private Boolean concluso;
-	private Boolean ritirato;
-	private Campo[] campiBase;
+	protected boolean chiuso;
+	protected boolean fallito;
+	protected boolean concluso;
+	protected boolean ritirato;
+	protected boolean scaduto;
+	protected boolean postiEsauriti;
+	protected Campo[] campiBase;
 	private int partecipantiAttuali;
 	private Vector<SpazioPersonale> listaPartecipanti;
 	private SpazioPersonale creatore;
@@ -42,6 +44,7 @@ public class Categoria implements Serializable {
 		nome=_nome;
 		descrizione=_descrizione;
 		partecipantiAttuali=1;
+		listaPartecipanti= new Vector<SpazioPersonale>();
 		chiuso=false;
 		fallito=false;
 		concluso=false;
@@ -49,8 +52,23 @@ public class Categoria implements Serializable {
 		creatore=_creatore;
 	}
 
+	/**
+	 * @return the listaPartecipanti
+	 */
+	public Vector<SpazioPersonale> getListaPartecipanti() {
+		return listaPartecipanti;
+	}
+
 	public String getNome() {
 		return nome;
+	}
+	
+	public String getStato() {
+		if(chiuso) return "Chiuso";
+		if(ritirato) return "Ritirato";
+		if(concluso) return "Concluso";
+		if(fallito) return "Fallito";
+		return "Aperto";
 	}
 
 	public String getDescrizione() {
@@ -62,10 +80,6 @@ public class Categoria implements Serializable {
 		return campiBase;
 	}
 
-	/*public void setCampiBase(Campo[] campiBase) {
-		this.campiBase = campiBase;
-	}*/
-	
 	public String toString() {
 		
 		String S=nome + ": " + descrizione;
@@ -82,37 +96,38 @@ public class Categoria implements Serializable {
 		partecipantiAttuali--;
 		listaPartecipanti.remove(rimosso);
 	}
-
-	private void controlloChiusura(Data dataOdierna) {
+	
+	public Integer getNumeroMassimoPartecipanti(){
 		Integer numeroPartecipanti=(Integer)campiBase[NUMERO_PARTECIPANTI].getValore();
-		Integer tolleranza=(Integer)campiBase[TOLLERANZA_PARTECIPANTI].getValore();
-		Data dataScadenza = (Data) campiBase[TERMINE_ISCRIZIONI].getValore();
-		boolean scaduto=dataScadenza.isPrecedente(dataOdierna);
-		boolean condizione1=partecipantiAttuali>=numeroPartecipanti &&  partecipantiAttuali<=numeroPartecipanti+tolleranza && scaduto;
-		Data dataRitiro = (Data) campiBase[TERMINE_RITIRO_ISCRIZIONE].getValore();
-		boolean ritirabile = dataRitiro.isPrecedente(dataOdierna);
-		boolean condizione2= !scaduto && ritirabile && (partecipantiAttuali==numeroPartecipanti+tolleranza);
-		
-		if (condizione1 || condizione2) {
-			chiuso=true;	
-			for (SpazioPersonale profilo : listaPartecipanti) {
-				profilo.addNotifica(infoChiusura());
-			}
-		}
-		
+		Integer tolleranza;
+		Integer temp=(Integer)campiBase[TOLLERANZA_PARTECIPANTI].getValore();
+		if(temp==null)
+			tolleranza= new Integer(0);
+		else tolleranza=temp;
+		return numeroPartecipanti+tolleranza;
 	}
 	
-	public boolean aggiornaStato(Data dataOdierna) {
-		controlloChiusura(dataOdierna);
-		
-		Data dataScadenza = (Data) campiBase[TERMINE_ISCRIZIONI].getValore();
+	public void aggiornaStato(Data dataOdierna) {
+		if(isAperto()) {
+			checkFallimento(dataOdierna);
+			checkConclusione(dataOdierna);
+			checkChiusura(dataOdierna);
+		}
+	}
+	
+	
+	public void checkFallimento(Data dataOdierna) {
+		Data dataScadenza = (Data) campiBase[TERMINE_ISCRIZIONI].getValore();	
 		if (dataScadenza.isPrecedente(dataOdierna) && (partecipantiAttuali < (int) campiBase[NUMERO_PARTECIPANTI].getValore())) {
 			fallito=true;
 			for (SpazioPersonale profilo : listaPartecipanti) {
 				profilo.addNotifica(infoFallimento());
+				
 			}
 		}
-		
+	}
+	
+	public void checkConclusione(Data dataOdierna) {
 		Data dataConclusiva;
 		if (campiBase[DATA_CONCLUSIVA].getValore()!=null) {
 			dataConclusiva = (Data) campiBase[DATA_CONCLUSIVA].getValore();
@@ -123,7 +138,23 @@ public class Categoria implements Serializable {
 		if (dataConclusiva.isPrecedente(dataOdierna) && !fallito) {
 			concluso=true;
 		}
-		return concluso || fallito || chiuso || ritirato;
+	}
+
+	
+	protected void checkChiusura(Data dataOdierna) {
+		Integer numeroPartecipanti=(Integer)campiBase[NUMERO_PARTECIPANTI].getValore();
+		Data termineIscrizioni = (Data) campiBase[TERMINE_ISCRIZIONI].getValore();
+		scaduto=termineIscrizioni.isPrecedente(dataOdierna);
+		
+		boolean nonPiuIscrivibile=partecipantiAttuali>=numeroPartecipanti &&  partecipantiAttuali<=getNumeroMassimoPartecipanti() && scaduto;
+		boolean postiEsauriti= !scaduto && !(isRitirabile(dataOdierna)) && (partecipantiAttuali==getNumeroMassimoPartecipanti());
+		
+		if( nonPiuIscrivibile || postiEsauriti ) {
+			chiuso=true;	
+			for (SpazioPersonale profilo : listaPartecipanti) {
+					profilo.addNotifica(infoChiusura());
+			}
+		}
 	}
 	
 	private String infoFallimento() {
@@ -142,39 +173,53 @@ public class Categoria implements Serializable {
 
 	public String infoChiusura() {
 		StringBuffer s = new StringBuffer();
-		s.append("L'evento "+ campiBase[TITOLO].getValore() +" si svolgerà.");
-		s.append(lineSeparator);
-		s.append("Data: "+ campiBase[DATA].getValore());
-		s.append(lineSeparator);
-		s.append("Ora: "+ campiBase[ORA].getValore());
-		s.append(lineSeparator);
-		s.append("Luogo: "+ campiBase[LUOGO].getValore());
-		s.append(lineSeparator);
-		s.append("Importo dovuto: "+ campiBase[QUOTA].getValore());
-		s.append(lineSeparator);
+			s.append("L'evento "+ campiBase[TITOLO].getValore() +" si svolgerà.");
+			s.append(lineSeparator);
+			s.append("Data: "+ campiBase[DATA].getValore());
+			s.append(lineSeparator);
+			s.append("Ora: "+ campiBase[ORA].getValore());
+			s.append(lineSeparator);
+			s.append("Luogo: "+ campiBase[LUOGO].getValore());
+			s.append(lineSeparator);
+			s.append(infoPagamento());
 		return s.toString();	
+	}
+
+	protected String infoPagamento() {
+		StringBuffer s = new StringBuffer();
+			s.append("Importo iscrizione: "+ campiBase[QUOTA].getValore());
+			s.append(lineSeparator);
+		return s.toString();
 	}
 	
 	public boolean isAperto() {
-		return (!chiuso && !fallito && !concluso && !ritirato);
+		return ((!chiuso) && (!fallito) && (!concluso) && (!ritirato));
+	}
+	
+	public boolean isIscrivibile(){
+		return isAperto() && partecipantiAttuali<getNumeroMassimoPartecipanti();
 	}
 	
 	public boolean isRitirabile(Data dataOdierna){
 		Data termineIscrizioni = (Data)campiBase[TERMINE_ISCRIZIONI].getValore();
-		Data termineRitiroIscrizioni = (Data)campiBase[TERMINE_RITIRO_ISCRIZIONE].getValore();
-		if(termineRitiroIscrizioni==null)
-			return dataOdierna.isPrecedente(termineIscrizioni);
-		else return dataOdierna.isPrecedente(termineRitiroIscrizioni);
+		Data temp=(Data)campiBase[TERMINE_RITIRO_ISCRIZIONE].getValore();
+		Data termineRitiroIscrizioni;
+		if(temp==null)
+			termineRitiroIscrizioni=termineIscrizioni;
+		else termineRitiroIscrizioni = temp;
+		
+		return (dataOdierna.isPrecedenteOppureUguale(termineRitiroIscrizioni));
 	}
 	
 	public void ritiraEvento() {
+		System.out.println("Evento ritirato con successo! \n");
 		ritirato=true;
 		for (SpazioPersonale profilo : listaPartecipanti) {
 			profilo.addNotifica(infoRitiro());
 		}
 	}
 	
-	public String getDescrizioneCampi() {
+	public String getCampiCompilati() {
 		StringBuffer s = new StringBuffer();
 		for(int i=0; i < campiBase.length; i++) { 
 			s.append("   " + campiBase[i].toStringValore());
